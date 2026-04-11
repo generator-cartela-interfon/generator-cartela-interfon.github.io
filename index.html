@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<title>Generator Cartela Optica Electra</title>
+<style>
+    @font-face {
+  font-family: fontbun; /* set name */
+  src: url(HarmonyOS_Sans_Regular.ttf); /* url of the font */
+}
+  body { font-family: fontbun; background: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
+  .card { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 450px; width: 100%; }
+  input, button { width: 100%; padding: 10px; margin: 10px 0; border-radius: 4px; border: 1px solid #ccc; box-sizing: border-box; }
+  button { background: #2ecc71; color: white; border: none; font-weight: bold; cursor: pointer; font-size: 16px;}
+  button:hover { background: #27ae60; }
+  .preview-wrapper { display: flex; justify-content: center; margin-top: 15px; }
+  .preview { background: #fff; display: flex; flex-direction: column-reverse; align-items: center; border: none; padding: 10px; }
+  
+  .p-handle { width: 100px; height: 50px; background: #95a5a6; border-radius: 0 0 8px 8px; position: relative; display: flex; justify-content: center; align-items: center; }
+  .p-hole { width: 30px; height: 20px; background: #fff; border-radius: 4px; }
+  .p-bar-detect { width: 100px; height: 16px; background: #34495e; border-radius: 4px 4px 0 0; }
+  .p-bit-line { width: 86px; background: #2c3e50; border-left: 7px solid #95a5a6; border-right: 7px solid #95a5a6; box-sizing: border-box; }
+  .p-bit-gap { width: 100px; background: transparent; border-left: 7px solid #95a5a6; border-right: 7px solid #95a5a6; box-sizing: border-box; }
+  
+  .label { font-size: 12px; font-weight: bold; color: #555; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h2>Generator Cartela Optica Electra</h2>
+  <label class="label">Cod Numeric (cel sub "ELECTRA" pe cartela originala)</label>
+  <input type="number" id="numCode" value="688"> 
+  
+  <label class="label">Cod Binar (referinta)</label>
+  <input type="text" id="binCode" value="001010110000" disabled="true">
+
+  <label class="label" style="text-align: center; display: block; margin-top: 10px;">Previzualizare</label>
+  <div class="preview-wrapper">
+    <div class="preview" id="preview"></div>
+  </div>
+  
+  <button onclick="downloadSTL()">Descarca model 3D (.stl)</button>
+  <p style="font-size: 11px; color: #666; text-align: center;">
+    Printeaza 3D folosind 100% infill, layer height de 0.16mm.
+  </p>
+  <p style="font-size: 11px; color: #666; text-align: center;">
+    Acest site nu foloseste cookie-uri, nu colecteaza date personale. Totul se intampla in browserul tau.
+  </p>
+  <p style="font-size: 11px; color: #666; text-align: center;">
+    Prin folosirea acestui generator esti de acord cu <a href="terms.html">Termenii si Conditiile</a>
+  </p>
+</div>
+
+<script>
+const numIn = document.getElementById('numCode');
+const binIn = document.getElementById('binCode');
+const preview = document.getElementById('preview');
+const scale = 5; 
+
+function updateBin() {
+    let b = parseInt(numIn.value).toString(2);
+    while(b.length < 12) b = '0' + b;
+    binIn.value = b;
+    renderPreview();
+}
+
+function renderPreview() {
+    const bin = binIn.value;
+    preview.innerHTML = '';
+    
+    // 1. Mânerul
+    let handle = document.createElement('div');
+    handle.className = 'p-handle';
+    let hole = document.createElement('div');
+    hole.className = 'p-hole';
+    handle.appendChild(hole);
+    preview.appendChild(handle);
+
+    // 2. NOUL SPAȚIU DE 2mm (10px la scara vizuală)
+    let initialGap = document.createElement('div');
+    initialGap.className = 'p-bit-gap';
+    initialGap.style.height = (2 * scale) + 'px';
+    preview.appendChild(initialGap);
+
+    // 3. Biții
+    const bits = bin.split('').reverse();
+    bits.forEach(bit => {
+        let lineLength = bit === '0' ? 2 : 1.25;
+        let gapLength = bit === '0' ? 1 : 2;
+
+        let line = document.createElement('div');
+        line.className = 'p-bit-line';
+        line.style.height = (lineLength * scale) + 'px';
+        line.style.background = bit === '1' ? '#e74c3c' : '#3498db';
+        preview.appendChild(line);
+
+        let gap = document.createElement('div');
+        gap.className = 'p-bit-gap';
+        gap.style.height = (gapLength * scale) + 'px';
+        preview.appendChild(gap);
+    });
+
+    // 4. Bara detecție
+    let detectBar = document.createElement('div');
+    detectBar.className = 'p-bar-detect';
+    detectBar.style.height = (4 * scale) + 'px';
+    preview.appendChild(detectBar);
+}
+
+numIn.addEventListener('input', updateBin);
+binIn.addEventListener('input', renderPreview);
+updateBin();
+
+function downloadSTL() {
+    const binStr = binIn.value;
+    const bits = binStr.split('').reverse(); 
+    
+    let stl = "solid electra_v2\n";
+    const width = 28;
+    const thickness = 2;
+    const railW = 2;
+    const handleL = 25;
+    const initialGap = 2; // Noul spațiu
+    const detectL = 4;
+
+    function addBox(x, y, z, w, l, h) {
+        let v = [[x,y,z],[x+w,y,z],[x+w,y+l,z],[x,y+l,z],[x,y,z+h],[x+w,y,z+h],[x+w,y+l,z+h],[x,y+l,z+h]];
+        const faces = [[3,2,1,0],[4,5,6,7],[0,1,5,4],[2,3,7,6],[3,0,4,7],[1,2,6,5]];
+        faces.forEach(f => {
+            let p1=v[f[0]], p2=v[f[1]], p3=v[f[2]], p4=v[f[3]];
+            stl += `facet normal 0 0 0\nouter loop\nvertex ${p1[0]} ${p1[1]} ${p1[2]}\nvertex ${p2[0]} ${p2[1]} ${p2[2]}\nvertex ${p3[0]} ${p3[1]} ${p3[2]}\nendloop\nendfacet\n`;
+            stl += `facet normal 0 0 0\nouter loop\nvertex ${p1[0]} ${p1[1]} ${p1[2]}\nvertex ${p3[0]} ${p3[1]} ${p3[2]}\nvertex ${p4[0]} ${p4[1]} ${p4[2]}\nendloop\nendfacet\n`;
+        });
+    }
+
+    // 1. Mâner
+    addBox(0, 0, 0, width, 5, thickness); 
+    addBox(0, 15, 0, width, 10, thickness);
+    addBox(0, 5, 0, 8, 10, thickness);
+    addBox(20, 5, 0, 8, 10, thickness);
+
+    // Avansăm Y-ul pentru a lăsa spațiul liber de 2mm
+    let currentY = handleL + initialGap; 
+    
+    // 2. Biții
+    bits.forEach(bit => {
+        let lineLength = bit === '0' ? 2 : 1.25;
+        let gapLength = bit === '0' ? 1 : 2;
+
+        addBox(railW, currentY, 0, width - 2*railW, lineLength, thickness);
+        currentY += lineLength;
+        currentY += gapLength;
+    });
+
+    // 3. Bara detecție
+    addBox(0, currentY, 0, width, detectL, thickness);
+    
+    let totalHeight = currentY + detectL;
+
+    // 4. Șinele laterale (pleacă de la mâner și acoperă inclusiv acel gap de 2mm până sus)
+    addBox(0, handleL, 0, railW, totalHeight - handleL, thickness);
+    addBox(width - railW, handleL, 0, railW, totalHeight - handleL, thickness);
+
+    stl += "endsolid electra_v2";
+    
+    const blob = new Blob([stl], {type: 'text/plain'});
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `cartela_${numIn.value}.stl`;
+    link.click();
+}
+</script>
+</body>
+</html>

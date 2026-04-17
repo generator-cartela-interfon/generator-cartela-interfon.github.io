@@ -30,10 +30,10 @@
 <div class="card">
   <h2>Generator Cartela Optica Electra</h2>
   <label class="label">Cod Numeric (cel sub "ELECTRA" pe cartela originala)</label>
-  <input type="number" id="numCode" value="688"> 
+  <input type="number" id="numCode" value="1234" placeholder="Scrie aici codul"> 
   
   <label class="label">Cod Binar (referinta)</label>
-  <input type="text" id="binCode" value="001010110000" disabled="true">
+  <input type="text" id="binCode" value="10101011101" disabled="true" placeholder="Aici va aparea codul binar">
 
   <label class="label" style="text-align: center; display: block; margin-top: 10px;">Previzualizare</label>
   <div class="preview-wrapper">
@@ -118,11 +118,11 @@ function downloadSTL() {
     
     let stl = "solid electra_v2\n";
     const width = 28;
-    const thickness = 2;
+    const thickness = 5;
     const railW = 2;
     const handleL = 25;
-    const initialGap = 2; // Noul spațiu
-    const detectL = 4;
+    const initialGap = 8; // Noul spațiu
+    const detectL = 9;
 
     function addBox(x, y, z, w, l, h) {
         let v = [[x,y,z],[x+w,y,z],[x+w,y+l,z],[x,y+l,z],[x,y,z+h],[x+w,y,z+h],[x+w,y+l,z+h],[x,y+l,z+h]];
